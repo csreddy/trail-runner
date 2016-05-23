@@ -52,6 +52,9 @@ angular
         $scope.getLoop = function() {
             console.log('found div')
             initMap($scope.originLocation, $scope.trailLength, $scope.travelMode);
+            setTimeout(function(){
+                removeSelectLeg();
+            }, 1000)
         };
 
 
@@ -204,7 +207,7 @@ angular
 
             Promise.all(loops).then(function(res) {
                  var results = rankResults(res, miles);
-                  $scope.trailDistance= results[0].totalDistance;
+                  $scope.trailDistance= Math.ceil(results[0].totalDistance);
                 displayLoop(results[0]); // pass the first one because thats the best route
             }, function(error) {
                 console.error(error)
@@ -353,6 +356,20 @@ angular
                 totalDistance += Number(waypoint.distance.text.replace(' mi', ''));
             })
             return totalDistance;
+        }
+
+        function removeSelectLeg(){
+          var elements = document.querySelectorAll("[jsaction='directionsPanel.selectLeg'],[class='adp-summary']");
+          var tables = document.querySelectorAll("table[class='adp-directions']");
+          for(var i=0; i< elements.length; i++){
+             // elements[i].remove();
+          }
+          // document.getElementById('directions').innerHTML = "";
+          for(var i=0; i< tables.length; i++){
+            // document.getElementById('directions').innerHTML += tables[i].innerHTML;
+          }
+
+
         }
 
 
