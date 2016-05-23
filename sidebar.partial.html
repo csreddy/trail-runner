@@ -1,0 +1,26 @@
+ <md-sidenav class="md-sidenav-left" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')" md-disable-backdrop="" md-whiteframe="4">
+
+      <md-toolbar class="md-theme-indigo">
+        <h1 class="md-toolbar-tools">Sidenav Left</h1>
+      </md-toolbar>
+      <md-content layout-padding="" ng-controller="LeftCtrl">
+        <md-button ng-click="close()" class="md-primary" hide-gt-md="">
+          Close Sidenav Left
+        </md-button>
+        <p hide-md="" show-gt-md=""></p>
+        <md-input-container>
+          <input id="origin-location" ng-init="initSearchBox()"  type="text" ng-model="originLocation" required>
+        </md-input-container>
+<!-- <md-autocomplete id="origin-input" ng-init="initSearchBox()" md-selected-item="selectedLocation" md-search-text="searchText" md-items="item in getMatches(searchText)" md-item-text="item.display">
+  <span md-highlight-text="searchText">{{item.display}}</span>
+</md-autocomplete> -->
+        <md-select ng-model="selectedMode" aria-label="select mode" >
+              <md-option ng-repeat="mode in travelModes" value="{{mode.value}}">
+                {{mode.label}}
+              </md-option>
+            </md-select>
+         <md-button class="md-raised md-primary" ng-click="getLoop()">Submit</md-button>
+        <div id="directions"></div>
+      </md-content>
+
+    </md-sidenav>

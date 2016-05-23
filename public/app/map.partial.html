@@ -1,10 +1,10 @@
   <md-toolbar class="md-hue-2">
       <div class="md-toolbar-tools">
-        <md-button class="md-icon-button" aria-label="Settings" ng-disabled="true">
+        <md-button class="md-icon-button" aria-label="Settings" ng-click="close()">
          <i class="material-icons">menu</i>
         </md-button>
         <h2>
-          <span>Trail Runner</span>
+          <b><i class="material-icons">directions_run</i><span>TrailRunner</span></b>
         </h2>
         <span flex></span>
         <md-button class="md-icon-button" aria-label="Favorite">
@@ -20,17 +20,34 @@
   <section layout="row" flex="">
     <md-sidenav class="md-sidenav-left" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')" md-disable-backdrop="" md-whiteframe="4">
 
-      <md-toolbar class="md-theme-indigo">
+<!--       <md-toolbar class="md-theme-indigo">
         <h1 class="md-toolbar-tools">Sidenav Left</h1>
-      </md-toolbar>
+      </md-toolbar> -->
       <md-content layout-padding="" ng-controller="LeftCtrl">
         <md-button ng-click="close()" class="md-primary" hide-gt-md="">
           Close Sidenav Left
         </md-button>
         <p hide-md="" show-gt-md="">
-          This sidenav is locked open on your device. To go back to the default behavior,
-          narrow your display.
+        TrailRunner gives you a trail loop based on your entered location and maximum miles for the trail
         </p>
+
+         <div layout-gt-sm="row">
+             <md-input-container flex-gt-sm>
+              <input id="search-box" ng-model="originLocation" ng-init="initSearchBox()"  type="text" required>
+            </md-input-container>
+        </div>
+         <div layout-gt-sm="row">
+             <md-input-container flex-gt-sm>
+          <input id="trail" ng-model="trailLength"  ng-change="getTrail(trailLength)"type="text"  placeholder="Enter trail distance (in miles)" required>
+        </md-input-container>
+        </div>
+        <md-select ng-model="travelMode" ng-change="getTravelMode(travelMode)" aria-label="select mode" >
+              <md-option ng-repeat="mode in travelModes" value="{{mode.value}}">
+                {{mode.label}}
+              </md-option>
+            </md-select>
+         <md-button class="md-raised md-primary" ng-click="getLoop()">Get a loop</md-button>
+        <div id="directions"></div>
       </md-content>
 
     </md-sidenav>
@@ -58,7 +75,7 @@
           </md-button>
         </div>
 </div> -->
-  <div id="map" ng-init="initMap()"></div>
+  <div id="map"></div>
 
     </md-content>
 

@@ -21,11 +21,87 @@ angular
         $scope.isOpenRight = function() {
             return $mdSidenav('right').isOpen();
         };
-        $scope.initMap = function() {
+        $scope.travelModes = [{
+            value: google.maps.TravelMode.WALKING,
+            label: 'Walking'
+        }, {
+            value: google.maps.TravelMode.BICYCLING,
+            label: 'Bicycling'
+        }, {
+            value: google.maps.TravelMode.DRIVING,
+            label: 'Driving'
+        }]
+        $scope.travelMode = google.maps.TravelMode.WALKING // default
+
+        $scope.trailLength = 5;
+          $scope.getTrail = function(val){
+            $scope.trailLength = val;
+        }
+          $scope.getTravelMode = function(val){
+            $scope.travelMode = val;
+        }
+
+        $scope.getLoop = function() {
             console.log('found div')
-            initMap();
+            initMap($scope.originLocation, $scope.trailLength, $scope.travelMode);
         };
-        console.log('mapp')
+
+
+        $scope.initSearchBox = function() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: new google.maps.LatLng(37.397, -120.644),
+                scrollwheel: false,
+                zoom: 6
+            });
+            var autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-box'));
+           // autocomplete.bindTo('bounds', map);
+            var infowindow = new google.maps.InfoWindow();
+            var marker = new google.maps.Marker({
+                map: map,
+                anchorPoint: new google.maps.Point(0, -29)
+            });
+            autocomplete.addListener('place_changed', function() {
+                infowindow.close();
+                marker.setVisible(false);
+                var place = autocomplete.getPlace();
+                if (!place.geometry) {
+                    window.alert("Autocomplete's returned place contains no geometry");
+                    return;
+                }
+
+                // If the place has a geometry, then present it on a map.
+                if (place.geometry.viewport) {
+                    map.fitBounds(place.geometry.viewport);
+                } else {
+                    //console.log(place.geometry.location);
+                    $scope.originLocation  = place.geometry.location;
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(17); // Why 17? Because it looks good.
+                }
+                marker.setIcon( /** @type {google.maps.Icon} */ ({
+                    url: place.icon,
+                    size: new google.maps.Size(71, 71),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(17, 34),
+                    scaledSize: new google.maps.Size(35, 35)
+                }));
+                marker.setPosition(place.geometry.location);
+                marker.setVisible(true);
+
+                var address = '';
+                if (place.address_components) {
+                    address = [
+                        (place.address_components[0] && place.address_components[0].short_name || ''),
+                        (place.address_components[1] && place.address_components[1].short_name || ''),
+                        (place.address_components[2] && place.address_components[2].short_name || '')
+                    ].join(' ');
+                }
+
+                infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+                infowindow.open(map, marker);
+            });
+
+        }
 
         function calcSquare(origin, maxDist) {
             const geo = origin;
@@ -70,11 +146,11 @@ angular
 
             origin = angular.copy(geo) // reset
             p1 = origin = LEFT, p2 = origin = UP, p3 = origin = RIGHT, p4 = origin = DOWN
-             points.push([p1, p2, p3, p4]);
+                //  points.push([p1, p2, p3, p4]);
 
             origin = angular.copy(geo) // reset
             p1 = origin = DOWN, p2 = origin = RIGHT, p3 = origin = UP, p4 = origin = LEFT
-             points.push([p1, p2, p3, p4]);
+                // points.push([p1, p2, p3, p4]);
 
             console.log(points);
             return points;
@@ -94,31 +170,30 @@ angular
             })
         }
 
-        function initMap() {
-            var miles = 6;
-            var start = {
-                lat: 37.362376,
-                lng: -122.025885
-            };
-            // var start = {lat: 37.397, lng: 120.644};
+        function initMap(origin, miles) {
+         if(!miles || !origin) return
+//             var miles = 6;
+//             var start = {
+//                 lat: 37.362376,
+//                 lng: -122.025885
+//             };
+          var start = {
+            lat: origin.lat(),
+            lng: origin.lng()
+          }
             var points = calcSquare(start, miles);
 
-            var map = new google.maps.Map(document.getElementById('map'), {
-                center: new google.maps.LatLng(start.lat, start.lng),
-                scrollwheel: false,
-                zoom: 6
-            });
 
-            var requests = composeLoopRouteReqs(points);
+            var requests = composeLoopRouteReqs(points, $scope.travelMode);
             var loops = getAllLoopDirections(requests)
-            var results = [];
             loops = loops.map(function(loopPromiseArr) {
                 return getLoopDirections(loopPromiseArr).then();
             });
+
+
             Promise.all(loops).then(function(res) {
-                results = rankResults(res, miles);
-                console.log('---------', res);
-              displayLoop(results[0], map);
+                 var results = rankResults(res, miles);
+                displayLoop(results[0]); // pass the first one because thats the best route
             }, function(error) {
                 console.error(error)
             })
@@ -128,13 +203,33 @@ angular
         }
 
 
-        function displayLoop(result, map) {
+        function displayLoop(result) {
+          console.log('FINAL', result)
+             var map = new google.maps.Map(document.getElementById('map'), {
+                //center: result.directions[0].request.origin,
+                scrollwheel: false,
+               fullscreenControl: true,
+               //maxZoom: 14
+            });
+          var bounds = new google.maps.LatLngBounds();
           var routeDisplay = [];
-          result.directions.map(function(leg, index) {
-             routeDisplay[index] = new google.maps.DirectionsRenderer({
+            result.directions.map(function(leg, index) {
+              bounds.union(leg.routes[0].bounds);
+              map.setCenter(bounds.getCenter());
+              map.fitBounds(bounds);
+              routeDisplay[index] = new google.maps.DirectionsRenderer({
                     map: map
                 });
-            routeDisplay[index].setDirections(leg);
+               routeDisplay[index].setOptions({
+                  polylineOptions: {
+                        strokeWeight: 4,
+                        strokeOpacity: 0.8,
+                        strokeColor: 'red'
+                    }
+               })
+                //routeDisplay[index].setPanel(null)
+                routeDisplay[index].setPanel(document.getElementById('directions'))
+                routeDisplay[index].setDirections(leg);
             })
         }
 
@@ -146,14 +241,15 @@ angular
             return results;
         }
 
-        function composeLoopRouteReqs(pointsArr) {
+        function composeLoopRouteReqs(pointsArr, travelMode) {
             var loopReqs = [];
+
             pointsArr.map(function(points) {
                 var loop = points.map(function(start, index) {
-                    return {
+                  return {
                         destination: (points.length - 1 === index) ? points[0] : points[index + 1],
                         origin: start,
-                        travelMode: google.maps.TravelMode.WALKING,
+                        travelMode:  google.maps.TravelMode[travelMode],
                         unitSystem: google.maps.UnitSystem.IMPERIAL
                     };
                 })
@@ -191,31 +287,29 @@ angular
                     reject(error);
                 })
             })
-
-
         }
 
-        function composeRouteRequests(points) {
+        function composeRouteRequests(points, travelMode) {
             var requests = [];
             points.map(function(start, index) {
                 requests.push({
                     destination: (points.length - 1 === index) ? points[0] : points[index + 1],
                     origin: start,
-                    travelMode: google.maps.TravelMode.WALKING,
+                    travelMode:  google.maps.TravelMode[travelMode],
                     unitSystem: google.maps.UnitSystem.IMPERIAL
                 });
             })
             return requests;
         }
 
-        function composeRequests(pointsArr) {
+        function composeRequests(pointsArr, travelMode) {
             var requests = [];
             pointsArr.map(function(points) {
                 points.map(function(start, index) {
                     requests.push({
                         destination: (points.length - 1 === index) ? points[0] : points[index + 1],
                         origin: start,
-                        travelMode: google.maps.TravelMode.WALKING,
+                        travelMode: google.maps.TravelMode[travelMode],
                         unitSystem: google.maps.UnitSystem.IMPERIAL
                     });
                 })
@@ -228,10 +322,11 @@ angular
                 // Pass the directions request to the directions service.
                 var directionsService = new google.maps.DirectionsService();
                 directionsService.route(request, function(response, status) {
-                    // console.log(response);
+
                     if (status == google.maps.DirectionsStatus.OK) {
                         return resolve(response);
                     }
+                    console.log('status', status);
                     return reject(response);
                 });
             })
