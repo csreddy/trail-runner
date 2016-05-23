@@ -1,6 +1,6 @@
   <md-toolbar class="md-hue-2">
       <div class="md-toolbar-tools">
-        <md-button class="md-icon-button" aria-label="Settings" ng-click="close()">
+        <md-button class="md-icon-button" aria-label="Settings" ng-click="open()">
          <i class="material-icons">menu</i>
         </md-button>
         <h2>
@@ -20,9 +20,9 @@
   <section layout="row" flex="">
     <md-sidenav class="md-sidenav-left" md-component-id="left" md-is-locked-open="$mdMedia('gt-md')" md-disable-backdrop="" md-whiteframe="4">
 
-<!--       <md-toolbar class="md-theme-indigo">
-        <h1 class="md-toolbar-tools">Sidenav Left</h1>
-      </md-toolbar> -->
+      <md-toolbar class="md-theme-indigo" ng-hide="!trailDistance">
+        <h1 class="md-toolbar-tools">Trail Length : {{trailDistance}} miles</h1>
+      </md-toolbar>
       <md-content layout-padding="" ng-controller="LeftCtrl">
         <md-button ng-click="close()" class="md-primary" hide-gt-md="">
           Close Sidenav Left
@@ -31,22 +31,6 @@
         TrailRunner gives you a trail loop based on your entered location and maximum miles for the trail
         </p>
 
-         <div layout-gt-sm="row">
-             <md-input-container flex-gt-sm>
-              <input id="search-box" ng-model="originLocation" ng-init="initSearchBox()"  type="text" required>
-            </md-input-container>
-        </div>
-         <div layout-gt-sm="row">
-             <md-input-container flex-gt-sm>
-          <input id="trail" ng-model="trailLength"  ng-change="getTrail(trailLength)"type="text"  placeholder="Enter trail distance (in miles)" required>
-        </md-input-container>
-        </div>
-        <md-select ng-model="travelMode" ng-change="getTravelMode(travelMode)" aria-label="select mode" >
-              <md-option ng-repeat="mode in travelModes" value="{{mode.value}}">
-                {{mode.label}}
-              </md-option>
-            </md-select>
-         <md-button class="md-raised md-primary" ng-click="getLoop()">Get a loop</md-button>
         <div id="directions"></div>
       </md-content>
 
@@ -75,6 +59,27 @@
           </md-button>
         </div>
 </div> -->
+
+         <md-content md-theme="docs-dark" layout-gt-sm="row" layout-padding>
+      <md-input-container class="md-block" flex-gt-xs>
+         <label>Enter Location</label>
+        <input id="search-box" ng-init="initSearchBox()"  type="text" required>
+        </md-input-container>
+           <md-input-container>
+        <label>Enter trail distance (in miles)</label>
+       <input id="trail" ng-model="trailLength"  ng-change="getTrail(trailLength)" type="number"  required>
+      </md-input-container>
+      <md-input-container>
+        <label>Mode</label>
+         <md-select ng-model="travelMode" ng-change="getTravelMode(travelMode)" aria-label="select mode" >
+              <md-option ng-repeat="mode in travelModes" value="{{mode.value}}">
+                {{mode.label}}
+              </md-option>
+            </md-select>
+      </md-input-container>
+ <md-button class="md-primary" ng-click="getLoop()">Get trail loop</md-button>
+  </md-content>
+
   <div id="map"></div>
 
     </md-content>

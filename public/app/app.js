@@ -11,15 +11,23 @@ angular
         });
     }])
     .config(function($mdThemingProvider) {
-        $mdThemingProvider.theme('default')
+
+  $mdThemingProvider.theme('default')
             .primaryPalette('red')
             .accentPalette('orange');
+  $mdThemingProvider.theme('docs-dark')
+      .primaryPalette('grey')
+      .accentPalette('red')
+      .dark();
     })
     .controller('TrailCtrl', function($scope, $timeout, $mdSidenav, $log) {
         $scope.toggleLeft = buildDelayedToggler('left');
         $scope.toggleRight = buildToggler('right');
         $scope.isOpenRight = function() {
             return $mdSidenav('right').isOpen();
+        };
+         $scope.open = function() {
+            $mdSidenav('left').open()
         };
         $scope.travelModes = [{
             value: google.maps.TravelMode.WALKING,
@@ -32,7 +40,7 @@ angular
             label: 'Driving'
         }]
         $scope.travelMode = google.maps.TravelMode.WALKING // default
-
+        $scope.trailDistance = null;
         $scope.trailLength = 5;
           $scope.getTrail = function(val){
             $scope.trailLength = val;
@@ -48,6 +56,9 @@ angular
 
 
         $scope.initSearchBox = function() {
+          // remove placeholder set by google api, due to some bug either in angular-material or google maps api
+          // inline placeholder is not overriding this value
+          document.getElementById('search-box').placeholder = '';
             var map = new google.maps.Map(document.getElementById('map'), {
                 center: new google.maps.LatLng(37.397, -120.644),
                 scrollwheel: false,
@@ -193,6 +204,7 @@ angular
 
             Promise.all(loops).then(function(res) {
                  var results = rankResults(res, miles);
+                  $scope.trailDistance= results[0].totalDistance;
                 displayLoop(results[0]); // pass the first one because thats the best route
             }, function(error) {
                 console.error(error)
@@ -204,6 +216,7 @@ angular
 
 
         function displayLoop(result) {
+          document.getElementById('directions').innerHTML = '';
           console.log('FINAL', result)
              var map = new google.maps.Map(document.getElementById('map'), {
                 //center: result.directions[0].request.origin,
@@ -212,25 +225,26 @@ angular
                //maxZoom: 14
             });
           var bounds = new google.maps.LatLngBounds();
-          var routeDisplay = [];
             result.directions.map(function(leg, index) {
               bounds.union(leg.routes[0].bounds);
               map.setCenter(bounds.getCenter());
               map.fitBounds(bounds);
-              routeDisplay[index] = new google.maps.DirectionsRenderer({
-                    map: map
+              var routeDisplay = new google.maps.DirectionsRenderer({
+                    map: map,
+                    panel: document.getElementById('directions')
                 });
-               routeDisplay[index].setOptions({
+               routeDisplay.setOptions({
                   polylineOptions: {
                         strokeWeight: 4,
                         strokeOpacity: 0.8,
                         strokeColor: 'red'
                     }
                })
-                //routeDisplay[index].setPanel(null)
-                routeDisplay[index].setPanel(document.getElementById('directions'))
-                routeDisplay[index].setDirections(leg);
+
+                routeDisplay.setDirections(leg);
+               console.log('route display', routeDisplay)
             })
+
         }
 
         function rankResults(results, miles) {
