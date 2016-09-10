@@ -211,7 +211,7 @@ angular
 
             Promise.all(loops).then(function(res) {
                  var results = rankResults(res, miles);
-                  $scope.trailDistance= results[0].totalDistance ;//Math.ceil(results[0].totalDistance);
+                  $scope.trailDistance= Math.round(results[0].totalDistance * 100)/100;
                 displayLoop(results[0]); // pass the first one because thats the best route
             }, function(error) {
                 console.error(error)
