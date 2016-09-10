@@ -49,11 +49,30 @@ angular
             $scope.travelMode = val;
         }
 
+          var map = new google.maps.Map(document.getElementById('map'), {
+                center: new google.maps.LatLng(37.397, -120.644),
+                scrollwheel: false,
+                zoom: 6
+            });
+
+       var marker = new google.maps.Marker({
+                map: map,
+                anchorPoint: new google.maps.Point(0, -29)
+            });
+
         $scope.getLoop = function() {
-            console.log('found div')
             initMap($scope.originLocation, $scope.trailLength, $scope.travelMode);
             setTimeout(function(){
                 removeSelectLeg();
+                angular.element(document.getElementsByClassName('adp-warnbox')).remove();
+                angular.element(document.getElementsByClassName('adp-placemark')).remove();
+              angular.element(document.getElementsByClassName('adp-legal')).remove();
+              angular.element(document.getElementsByClassName('adp-summary')).remove();
+              var rows = document.querySelectorAll('.adp-directions tr')
+                for(var i = 0;i<rows.length;i++){
+                rows[i].querySelectorAll('td')[1].innerHTML = i+1;
+                }
+
             }, 1000)
         };
 
@@ -62,18 +81,9 @@ angular
           // remove placeholder set by google api, due to some bug either in angular-material or google maps api
           // inline placeholder is not overriding this value
           document.getElementById('search-box').placeholder = '';
-            var map = new google.maps.Map(document.getElementById('map'), {
-                center: new google.maps.LatLng(37.397, -120.644),
-                scrollwheel: false,
-                zoom: 6
-            });
             var autocomplete = new google.maps.places.Autocomplete(document.getElementById('search-box'));
            // autocomplete.bindTo('bounds', map);
             var infowindow = new google.maps.InfoWindow();
-            var marker = new google.maps.Marker({
-                map: map,
-                anchorPoint: new google.maps.Point(0, -29)
-            });
             autocomplete.addListener('place_changed', function() {
                 infowindow.close();
                 marker.setVisible(false);
@@ -86,12 +96,12 @@ angular
                 // If the place has a geometry, then present it on a map.
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
-                } else {
-                    //console.log(place.geometry.location);
-                    $scope.originLocation  = place.geometry.location;
+                }
+                    console.log('geo coded lat:%s lng:%s', place.geometry.location.lat(), place.geometry.location.lng())
+                   $scope.originLocation  = place.geometry.location;
                     map.setCenter(place.geometry.location);
                     map.setZoom(17); // Why 17? Because it looks good.
-                }
+
                 marker.setIcon( /** @type {google.maps.Icon} */ ({
                     url: place.icon,
                     size: new google.maps.Size(71, 71),
@@ -122,9 +132,14 @@ angular
             var unitDist = 0.00691; // in miles, 11.132 in meters
             var edge = (maxDist * unitDist) / 4;
 
+           // 4 coordinates representing 4 corners of the square
             var UP = {
                 lat: origin.lat + edge,
                 lng: origin.lng
+            }
+            var RIGHT = {
+                lat: origin.lat,
+                lng: origin.lng - edge
             }
             var DOWN = {
                 lat: origin.lat - edge,
@@ -134,16 +149,6 @@ angular
                 lat: origin.lat,
                 lng: origin.lng + edge
             }
-            var RIGHT = {
-                lat: origin.lat,
-                lng: origin.lng - edge
-            }
-
-            // 4 coordinates representing 4 corners of the square
-            //    var p1 = origin = {lat: origin.lat + edge, lng: origin.lng} // up
-            //    var p2 = origin = {lat: origin.lat, lng: origin.lng - edge} // right
-            //    var p3 = origin = {lat: origin.lat - edge , lng: origin.lng} // down
-            //    var p4 = origin = {lat: origin.lat, lng: origin.lng + edge} // left
 
             origin = angular.copy(geo) // reset
             var p1 = origin = RIGHT;
@@ -151,22 +156,21 @@ angular
             var p3 = origin = LEFT;
             var p4 = origin = UP;
             var points = [
-                [p1, p2, p3, p4]
+                [geo, p1, p2, p3]
             ];
+
 
             origin = angular.copy(geo) // reset
             p1 = origin = UP, p2 = origin = RIGHT, p3 = origin = DOWN, p4 = origin = LEFT
-            points.push([p1, p2, p3, p4]);
+            points.push([geo, p1, p2, p3]);
 
             origin = angular.copy(geo) // reset
             p1 = origin = LEFT, p2 = origin = UP, p3 = origin = RIGHT, p4 = origin = DOWN
-                //  points.push([p1, p2, p3, p4]);
+                //  points.push([geo, p1, p2, p3]);
 
             origin = angular.copy(geo) // reset
             p1 = origin = DOWN, p2 = origin = RIGHT, p3 = origin = UP, p4 = origin = LEFT
-                // points.push([p1, p2, p3, p4]);
-
-            console.log(points);
+                // points.push([geo, p1, p2, p3]);
             return points;
         }
 
@@ -195,9 +199,9 @@ angular
             lat: origin.lat(),
             lng: origin.lng()
           }
+
+
             var points = calcSquare(start, miles);
-
-
             var requests = composeLoopRouteReqs(points, $scope.travelMode);
             var loops = getAllLoopDirections(requests)
             loops = loops.map(function(loopPromiseArr) {
@@ -212,21 +216,13 @@ angular
             }, function(error) {
                 console.error(error)
             })
-
-
-            //showMarkers(points)
         }
 
 
         function displayLoop(result) {
           document.getElementById('directions').innerHTML = '';
           console.log('FINAL', result)
-             var map = new google.maps.Map(document.getElementById('map'), {
-                //center: result.directions[0].request.origin,
-                scrollwheel: false,
-               fullscreenControl: true,
-               //maxZoom: 14
-            });
+             //map.setZoom(10);
           var bounds = new google.maps.LatLngBounds();
             result.directions.map(function(leg, index) {
               bounds.union(leg.routes[0].bounds);
@@ -234,7 +230,8 @@ angular
               map.fitBounds(bounds);
               var routeDisplay = new google.maps.DirectionsRenderer({
                     map: map,
-                    panel: document.getElementById('directions')
+                    panel: document.getElementById('directions'),
+                    suppressMarkers:true
                 });
                routeDisplay.setOptions({
                   polylineOptions: {
@@ -245,7 +242,12 @@ angular
                })
 
                 routeDisplay.setDirections(leg);
-               console.log('route display', routeDisplay)
+              if(result.directions.length > 0 ){
+             //console.log(new google.maps.LatLng(result.directions[0].request.origin.lat, result.directions[0].request.origin.lng))
+                marker.setPosition(new google.maps.LatLng(result.directions[0].request.origin.lat, result.directions[0].request.origin.lng));
+              marker.setVisible(true);
+              }
+
             })
 
         }
@@ -289,7 +291,6 @@ angular
         function getLoopDirections(promises) {
             return new Promise(function(resolve, reject) {
                 Promise.all(promises).then(function(directions) {
-                    console.log('directions-----', directions);
                     var totalDistance = 0;
                     directions.map(function(leg) {
                         totalDistance += calcTotalDistance(leg.routes[0].legs);
@@ -343,7 +344,6 @@ angular
                     if (status == google.maps.DirectionsStatus.OK) {
                         return resolve(response);
                     }
-                    console.log('status', status);
                     return reject(response);
                 });
             })
@@ -371,6 +371,7 @@ angular
 
 
         }
+
 
 
         //   ------------------------------------------------------------------------

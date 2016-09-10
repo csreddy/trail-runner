@@ -6,15 +6,16 @@
         <h2>
           <b><i class="material-icons">directions_run</i><span>TrailRunner</span></b>
         </h2>
+
         <span flex></span>
-        <md-button class="md-icon-button" aria-label="Favorite">
-<!--           <md-icon md-svg-icon="img/icons/favorite.svg" style="color: greenyellow;"></md-icon> -->
+        <small><i>TrailRunner gives you a trail loop based on your entered location and maximum miles for the trail</i></small>
+          <!--
+            <md-button class="md-icon-button" aria-label="Favorite">
           <i class="material-icons">favorite</i>
         </md-button>
         <md-button class="md-icon-button" aria-label="More">
-<!--           <md-icon md-svg-icon="img/icons/more_vert.svg"></md-icon> -->
           <i class="material-icons">more_vert</i>
-        </md-button>
+        </md-button> -->
       </div>
     </md-toolbar>
   <section layout="row" flex="">
@@ -23,56 +24,31 @@
       <md-toolbar class="md-theme-indigo" ng-hide="!trailDistance">
         <h1 class="md-toolbar-tools">Trail Length : {{trailDistance}} miles</h1>
       </md-toolbar>
-      <md-content layout-padding="" ng-controller="LeftCtrl">
+      <md-content layout-padding="" ng-controller="LeftCtrl" style="max-height: 900px;">
         <md-button ng-click="close()" class="md-primary" hide-gt-md="">
           Close Sidenav Left
         </md-button>
-        <p hide-md="" show-gt-md="">
+<!--         <p hide-md="" show-gt-md="">
         TrailRunner gives you a trail loop based on your entered location and maximum miles for the trail
-        </p>
-
+        </p> -->
         <div id="directions"></div>
       </md-content>
-
     </md-sidenav>
 
     <md-content flex="" layout-padding="">
-
-<!--       <div layout="column" layout-fill="" layout-align="top center">
-        <p>
-        The left sidenav will 'lock open' on a medium (>=960px wide) device.
-        </p>
-        <p>
-        The right sidenav will focus on a specific child element.
-
-        </p>
-
-        <div>
-          <md-button ng-click="toggleLeft()" class="md-primary" hide-gt-md="">
-            Toggle left
-          </md-button>
-        </div>
-
-        <div>
-          <md-button ng-click="toggleRight()" ng-hide="isOpenRight()" class="md-primary">
-            Toggle right
-          </md-button>
-        </div>
-</div> -->
-
          <md-content md-theme="docs-dark" layout-gt-sm="row" layout-padding>
       <md-input-container class="md-block" flex-gt-xs>
          <label>Enter Location</label>
-        <input id="search-box" ng-init="initSearchBox()"  type="text" required>
+        <input id="search-box" ng-focus="initSearchBox()"  type="text" required>
         </md-input-container>
            <md-input-container>
-        <label>Enter trail distance (in miles)</label>
+        <label>Trail distance (in miles)</label>
        <input id="trail" ng-model="trailLength"  ng-change="getTrail(trailLength)" type="number"  required>
       </md-input-container>
       <md-input-container>
         <label>Mode</label>
          <md-select ng-model="travelMode" ng-change="getTravelMode(travelMode)" aria-label="select mode" >
-              <md-option ng-repeat="mode in travelModes" value="{{mode.value}}">
+           <md-option ng-repeat="mode in travelModes" value="{{mode.value}}">
                 {{mode.label}}
               </md-option>
             </md-select>
@@ -80,10 +56,9 @@
  <md-button class="md-primary" ng-click="getLoop()">Get trail loop</md-button>
   </md-content>
 
+
   <div id="map"></div>
-
     </md-content>
-
     <md-sidenav class="md-sidenav-right md-whiteframe-4dp" md-component-id="right">
 
       <md-toolbar class="md-theme-light">
