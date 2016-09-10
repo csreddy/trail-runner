@@ -31,7 +31,7 @@ angular
         };
         $scope.travelModes = [{
             value: google.maps.TravelMode.WALKING,
-            label: 'Walking'
+            label: 'Walking/Running'
         }, {
             value: google.maps.TravelMode.BICYCLING,
             label: 'Bicycling'
@@ -66,9 +66,9 @@ angular
                 removeSelectLeg();
                 angular.element(document.getElementsByClassName('adp-warnbox')).remove();
                 angular.element(document.getElementsByClassName('adp-placemark')).remove();
-              angular.element(document.getElementsByClassName('adp-legal')).remove();
-              angular.element(document.getElementsByClassName('adp-summary')).remove();
-              var rows = document.querySelectorAll('.adp-directions tr')
+                angular.element(document.getElementsByClassName('adp-legal')).remove();
+                angular.element(document.getElementsByClassName('adp-summary')).remove();
+               var rows = document.querySelectorAll('.adp-directions tr')
                 for(var i = 0;i<rows.length;i++){
                 rows[i].querySelectorAll('td')[1].innerHTML = i+1;
                 }
@@ -211,7 +211,7 @@ angular
 
             Promise.all(loops).then(function(res) {
                  var results = rankResults(res, miles);
-                  $scope.trailDistance= Math.ceil(results[0].totalDistance);
+                  $scope.trailDistance= results[0].totalDistance ;//Math.ceil(results[0].totalDistance);
                 displayLoop(results[0]); // pass the first one because thats the best route
             }, function(error) {
                 console.error(error)
